@@ -1,0 +1,1978 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer,
+  Tooltip, XAxis, YAxis
+} from 'recharts';
+import './App.css';
+
+const IMAGES = {
+  patient: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&auto=format&fit=crop&q=85',
+  doctor: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=160&auto=format&fit=crop&q=85'
+};
+
+const INITIAL_USERS = [
+  {
+    email: 'maria@nutrisalud.com',
+    password: '123',
+    role: 'cliente',
+    nombre: 'María Pérez',
+    edad: 28,
+    estatura: 1.65,
+    peso: 65.5
+  },
+  {
+    email: 'carlos@nutrisalud.com',
+    password: '123',
+    role: 'cliente',
+    nombre: 'Carlos Gómez',
+    edad: 35,
+    estatura: 1.75,
+    peso: 78
+  },
+  {
+    email: 'doctora@nutrisalud.com',
+    password: 'admin',
+    role: 'admin',
+    nombre: 'Dra. Valeria Martínez',
+    especialidad: 'Nutrióloga clínica'
+  }
+];
+
+const INITIAL_SURVEY = [
+  { name: 'Verduras', porciones: 5 },
+  { name: 'Frutas', porciones: 4 },
+  { name: 'Cereales', porciones: 3 },
+  { name: 'Proteína', porciones: 6 }
+];
+
+const readStorage = (key, fallback) => {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+function App() {
+  const [users, setUsers] = useState(() =>
+    readStorage('nutri_users', INITIAL_USERS)
+  );
+
+  const [currentUser, setCurrentUser] = useState(() =>
+    readStorage('nutri_session', null)
+  );
+
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [surveyData, setSurveyData] = useState(() =>
+    readStorage('nutri_survey', INITIAL_SURVEY)
+  );
+
+  const [bpDraft, setBpDraft] = useState({
+    PAS: '',
+    PAD: '',
+    fecha: new Date().toISOString().slice(0, 10),
+    hora: new Date().toTimeString().slice(0, 5),
+    notas: ''
+  });
+
+  const [bpNotice, setBpNotice] = useState('');
+  const [activeChatClient, setActiveChatClient] = useState('maria@nutrisalud.com');
+  const [inputMsg, setInputMsg] = useState('');
+  const [selectedProfileEmail, setSelectedProfileEmail] = useState('maria@nutrisalud.com');
+  const [profileNotice, setProfileNotice] = useState('');
+  const [passwordNotice, setPasswordNotice] = useState('');
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [profileDraft, setProfileDraft] = useState({});
+
+  const [showNewPatient, setShowNewPatient] = useState(false);
+  const [newPatient, setNewPatient] = useState({
+    nombre: '',
+    email: '',
+    password: ''
+  });
+
+  const [newPatientNotice, setNewPatientNotice] = useState('');
+
+  const [conversations, setConversations] = useState(() =>
+    readStorage('nutri_chats', {
+      'maria@nutrisalud.com': [
+        {
+          sender: 'admin',
+          text: '¡Hola María! Bienvenida a tu espacio de seguimiento. ¿Cómo te has sentido esta semana?'
+        },
+        {
+          sender: 'cliente',
+          text: 'Hola doctora, tengo una duda sobre mi seguimiento.'
+        }
+      ]
+    })
+  );
+
+  const isClient = currentUser?.role === 'cliente';
+
+  const patients = useMemo(
+    () => users.filter(user => user.role === 'cliente'),
+    [users]
+  );
+
+  const selectedChat = isClient ? currentUser?.email : activeChatClient;
+  const currentMessages = conversations[selectedChat] || [];
+
+  const profileTarget = isClient
+    ? currentUser
+    : (
+      patients.find(patient => patient.email === selectedProfileEmail)
+      || patients[0]
+    );
+
+  const pressureTarget = isClient
+    ? currentUser
+    : (
+      patients.find(patient => patient.email === selectedProfileEmail)
+      || patients[0]
+    );
+
+  const pressureRecords = pressureTarget?.pressureHistory || [];
+  const latestPressure = pressureRecords[0] || null;
+
+  const pressureChartData = [...pressureRecords]
+    .reverse()
+    .map(record => ({ ...record, day: record.fecha }));
+
+  useEffect(() => {
+    if (profileTarget) {
+      setProfileDraft({
+        nombre: '',
+        fechaNacimiento: '',
+        edad: '',
+        sexo: '',
+        estatura: '',
+        peso: '',
+        foto: '',
+        email: '',
+        telefono: '',
+        direccion: '',
+        contactoEmergencia: '',
+        antecedentes: '',
+        alergias: '',
+        medicamentos: '',
+        restricciones: '',
+        objetivo: '',
+        ...profileTarget
+      });
+    }
+  }, [profileTarget?.email, currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('nutri_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('nutri_session', JSON.stringify(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('nutri_chats', JSON.stringify(conversations));
+  }, [conversations]);
+
+  useEffect(() => {
+    localStorage.setItem('nutri_survey', JSON.stringify(surveyData));
+  }, [surveyData]);
+
+  const login = (event) => {
+    event.preventDefault();
+
+    const found = users.find(user =>
+      user.email.toLowerCase() === authEmail.trim().toLowerCase()
+      && user.password === authPassword
+    );
+
+    if (!found) {
+      setAuthError('No pudimos validar tus datos. Revisa tu correo y contraseña.');
+      return;
+    }
+
+    setCurrentUser(found);
+    setActiveTab(found.role === 'admin' ? 'admin-dashboard' : 'inicio');
+    setAuthError('');
+  };
+
+  const logout = () => {
+    setCurrentUser(null);
+    setAuthPassword('');
+    setActiveTab('inicio');
+  };
+
+  const sendMessage = (event) => {
+    event.preventDefault();
+
+    const message = inputMsg.trim();
+
+    if (!message || !selectedChat) return;
+
+    const sender = isClient ? 'cliente' : 'admin';
+
+    setConversations(previous => ({
+      ...previous,
+      [selectedChat]: [
+        ...(previous[selectedChat] || []),
+        {
+          sender,
+          text: message,
+          time: new Date().toLocaleTimeString('es-MX', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        }
+      ]
+    }));
+
+    setInputMsg('');
+  };
+
+  const saveProfile = (event) => {
+    event.preventDefault();
+
+    if (!profileTarget) return;
+
+    const updatedUser = {
+      ...profileTarget,
+      ...profileDraft,
+      email: profileTarget.email
+    };
+
+    setUsers(previous =>
+      previous.map(user =>
+        user.email === profileTarget.email ? updatedUser : user
+      )
+    );
+
+    if (isClient) {
+      setCurrentUser(updatedUser);
+    }
+
+    setProfileNotice(
+      isClient
+        ? 'Tu información se guardó correctamente.'
+        : 'El expediente del paciente se actualizó correctamente.'
+    );
+  };
+
+  const createPatient = (event) => {
+    event.preventDefault();
+
+    const email = newPatient.email.trim().toLowerCase();
+
+    if (users.some(user => user.email.toLowerCase() === email)) {
+      setNewPatientNotice('Ya existe una cuenta con ese correo electrónico.');
+      return;
+    }
+
+    const patient = {
+      email,
+      password: newPatient.password,
+      role: 'cliente',
+      nombre: newPatient.nombre.trim(),
+      fechaNacimiento: '',
+      edad: '',
+      sexo: '',
+      estatura: '',
+      peso: '',
+      telefono: '',
+      direccion: '',
+      contactoEmergencia: '',
+      antecedentes: '',
+      alergias: '',
+      medicamentos: '',
+      restricciones: '',
+      objetivo: ''
+    };
+
+    setUsers(previous => [...previous, patient]);
+    setSelectedProfileEmail(email);
+    setActiveChatClient(email);
+
+    setConversations(previous => ({
+      ...previous,
+      [email]: []
+    }));
+
+    setNewPatient({
+      nombre: '',
+      email: '',
+      password: ''
+    });
+
+    setNewPatientNotice('');
+    setShowNewPatient(false);
+    setActiveTab('perfil');
+
+    setProfileNotice(
+      'Perfil creado. El paciente ya puede iniciar sesión y completar sus datos.'
+    );
+  };
+
+  const changePassword = (event) => {
+    event.preventDefault();
+    setPasswordNotice('');
+
+    if (currentPassword !== currentUser.password) {
+      setPasswordNotice('La contraseña actual no es correcta.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordNotice('La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordNotice('La confirmación no coincide con la nueva contraseña.');
+      return;
+    }
+
+    const updatedUser = {
+      ...currentUser,
+      password: newPassword
+    };
+
+    setUsers(previous =>
+      previous.map(user =>
+        user.email === currentUser.email ? updatedUser : user
+      )
+    );
+
+    setCurrentUser(updatedUser);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+
+    setPasswordNotice('Tu contraseña se actualizó correctamente.');
+  };
+
+  const classifyPressure = (PAS, PAD) => {
+    const systolic = Number(PAS);
+    const diastolic = Number(PAD);
+
+    if (
+      !Number.isFinite(systolic)
+      || !Number.isFinite(diastolic)
+      || systolic <= 0
+      || diastolic <= 0
+    ) {
+      return {
+        label: 'Sin clasificación',
+        level: 'neutral',
+        advice: 'Registra una medición válida.'
+      };
+    }
+
+    if (systolic >= 140 || diastolic >= 90) {
+      return {
+        label: 'Hipertensión · Estadio 2',
+        level: 'danger',
+        advice: 'Busca valoración de un profesional de salud. Si tienes síntomas intensos o la lectura es muy alta, solicita atención urgente.'
+      };
+    }
+
+    if (
+      systolic >= 130
+      || (diastolic >= 80 && diastolic <= 89)
+    ) {
+      return {
+        label: 'Hipertensión · Estadio 1',
+        level: 'warning',
+        advice: 'Conviene consultar con un profesional de salud y dar seguimiento a tus mediciones.'
+      };
+    }
+
+    if (
+      systolic >= 120
+      && systolic <= 129
+      && diastolic < 80
+    ) {
+      return {
+        label: 'Elevada',
+        level: 'warning',
+        advice: 'La presión está elevada. Mantén seguimiento y consulta cómo mejorar tus hábitos.'
+      };
+    }
+
+    if (systolic < 120 && diastolic < 80) {
+      return {
+        label: 'Normal',
+        level: 'good',
+        advice: 'La lectura está dentro del rango normal de la tabla.'
+      };
+    }
+
+    return {
+      label: 'Fuera de los rangos de la tabla',
+      level: 'neutral',
+      advice: 'Repite la medición en reposo y consulta a un profesional si persiste.'
+    };
+  };
+
+  const savePressure = (event) => {
+    event.preventDefault();
+
+    if (!pressureTarget) return;
+
+    const PAS = Number(bpDraft.PAS);
+    const PAD = Number(bpDraft.PAD);
+
+    if (
+      !Number.isFinite(PAS)
+      || !Number.isFinite(PAD)
+      || PAS < 50
+      || PAS > 260
+      || PAD < 30
+      || PAD > 160
+    ) {
+      setBpNotice('Ingresa valores válidos para la presión sistólica y diastólica.');
+      return;
+    }
+
+    const record = {
+      id: Date.now(),
+      PAS,
+      PAD,
+      fecha: bpDraft.fecha,
+      hora: bpDraft.hora,
+      notas: bpDraft.notas.trim()
+    };
+
+    const updatedUser = {
+      ...pressureTarget,
+      pressureHistory: [
+        record,
+        ...(pressureTarget.pressureHistory || [])
+      ]
+    };
+
+    setUsers(previous =>
+      previous.map(user =>
+        user.email === pressureTarget.email ? updatedUser : user
+      )
+    );
+
+    if (isClient) {
+      setCurrentUser(updatedUser);
+    }
+
+    setBpDraft({
+      PAS: '',
+      PAD: '',
+      fecha: new Date().toISOString().slice(0, 10),
+      hora: new Date().toTimeString().slice(0, 5),
+      notas: ''
+    });
+
+    setBpNotice('Medición guardada correctamente.');
+  };
+
+  const updateProfilePhoto = (file) => {
+    if (!file || !profileTarget) return;
+
+    if (!file.type.startsWith('image/')) {
+      setProfileNotice('Selecciona un archivo de imagen válido.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setProfileNotice('La fotografía debe pesar menos de 2 MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setProfileDraft(previous => ({
+        ...previous,
+        foto: reader.result
+      }));
+    };
+
+    reader.readAsDataURL(file);
+    setProfileNotice('');
+  };
+
+  const updatePortions = (index, value) => {
+    const safeValue = Math.max(
+      0,
+      Math.min(30, Number(value) || 0)
+    );
+
+    setSurveyData(previous =>
+      previous.map((item, i) =>
+        i === index
+          ? { ...item, porciones: safeValue }
+          : item
+      )
+    );
+  };
+
+  const menu = isClient
+    ? [
+      ['inicio', '▦', 'Inicio'],
+      ['presion', '♡', 'Presión arterial'],
+      ['encuesta', '▥', 'Mi seguimiento'],
+      ['mensajes', '✉', 'Mensajes'],
+      ['perfil', '◉', 'Mi perfil']
+    ]
+    : [
+      ['admin-dashboard', '▦', 'Panel general'],
+      ['presion', '♡', 'Presión arterial'],
+      ['mensajes', '✉', 'Mensajes'],
+      ['perfil', '◉', 'Perfiles']
+    ];
+
+  if (!currentUser) {
+    return (
+      <div className="login-page">
+        <div className="login-visual">
+          <div className="login-brand">
+            <span className="brand-mark">n+</span>
+            <span>NutriSalud<span className="brand-plus">+</span></span>
+          </div>
+
+          <div className="login-visual-copy">
+            <span className="eyebrow light">
+              BIENESTAR CON ACOMPAÑAMIENTO
+            </span>
+            <h1>Pequeños cambios.<br />Grandes resultados.</h1>
+            <p>
+              Un espacio pensado para acompañarte en cada paso de tu bienestar.
+            </p>
+          </div>
+
+          <div className="login-visual-footer">
+            Nutrición personalizada · Seguimiento profesional
+          </div>
+        </div>
+
+        <div className="login-panel">
+          <div className="login-form-wrap">
+            <div className="mobile-brand">
+              <span className="brand-mark">n+</span>
+              <strong>NutriSalud<span className="brand-plus">+</span></strong>
+            </div>
+
+            <span className="eyebrow">PORTAL DE BIENESTAR</span>
+            <h2>Qué gusto tenerte aquí</h2>
+            <p className="muted">
+              Inicia sesión para consultar tu información y continuar tu seguimiento.
+            </p>
+
+            {authError && (
+              <div className="alert-error" role="alert">
+                {authError}
+              </div>
+            )}
+
+            <form className="login-form" onSubmit={login}>
+              <label htmlFor="email">Correo electrónico</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="username"
+                placeholder="tu@correo.com"
+                value={authEmail}
+                onChange={e => setAuthEmail(e.target.value)}
+                required
+              />
+
+              <label htmlFor="password">Contraseña</label>
+
+              <div className="password-field">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="Ingresa tu contraseña"
+                  value={authPassword}
+                  onChange={e => setAuthPassword(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(value => !value)}
+                >
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
+                </button>
+              </div>
+
+              <button type="submit" className="button button-primary login-submit">
+                Iniciar sesión <span>→</span>
+              </button>
+            </form>
+
+            <div className="demo-access">
+              <strong>Accesos de demostración</strong>
+              <p><span>Paciente</span> maria@nutrisalud.com <b>·</b> 123</p>
+              <p><span>Profesional</span> doctora@nutrisalud.com <b>·</b> admin</p>
+            </div>
+
+            <p className="login-privacy">
+              Este portal es una demostración. No ingreses información médica real.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div>
+          <div className="sidebar-brand">
+            <span className="brand-mark">n+</span>
+            <div>
+              <strong>NutriSalud<span className="brand-plus">+</span></strong>
+              <small>Tu espacio de bienestar</small>
+            </div>
+          </div>
+
+          <div className="nav-caption">MENÚ PRINCIPAL</div>
+
+          <nav className="sidebar-nav" aria-label="Navegación principal">
+            {menu.map(([id, icon, label]) => (
+              <button
+                key={id}
+                className={`nav-item ${activeTab === id ? 'active' : ''}`}
+                onClick={() => setActiveTab(id)}
+              >
+                <span className="nav-icon">{icon}</span>
+                <span>{label}</span>
+                {activeTab === id && <span className="nav-indicator" />}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="sidebar-bottom">
+          <div className="help-card">
+            <span className="help-icon">♡</span>
+            <strong>Estamos para ayudarte</strong>
+            <p>Si tienes alguna duda, escríbenos desde Mensajes.</p>
+            <button onClick={() => setActiveTab('mensajes')}>
+              Contactar <span>→</span>
+            </button>
+          </div>
+
+          <div className="profile-mini">
+            <img
+              src={currentUser.foto || (isClient ? IMAGES.patient : IMAGES.doctor)}
+              alt=""
+            />
+            <div className="profile-copy">
+              <strong>{currentUser.nombre}</strong>
+              <small>
+                {isClient
+                  ? 'Paciente'
+                  : currentUser.especialidad || 'Profesional'}
+              </small>
+            </div>
+            <button
+              className="logout-icon"
+              onClick={logout}
+              title="Cerrar sesión"
+              aria-label="Cerrar sesión"
+            >
+              ↗
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <main className="main-area">
+        <header className="topbar">
+          <div>
+            <span className="topbar-label">
+              NUTRISALUD+ / {isClient ? 'PORTAL DEL PACIENTE' : 'ÁREA PROFESIONAL'}
+            </span>
+            <div className="topbar-date">
+              {new Date().toLocaleDateString('es-MX', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}
+            </div>
+          </div>
+
+          <div className="topbar-right">
+            <span className="secure-label">
+              <span className="secure-dot" /> Espacio de demostración
+            </span>
+            <div className="topbar-avatar">
+              {currentUser.foto
+                ? <img src={currentUser.foto} alt="Fotografía de perfil" />
+                : currentUser.nombre.split(' ').map(part => part[0]).slice(0, 2).join('')}
+            </div>
+          </div>
+        </header>
+
+        <div className="page-content">
+          {isClient && activeTab === 'inicio' && (
+            <>
+              <section className="page-heading">
+                <div>
+                  <span className="eyebrow">INICIO · TU ESTADO GENERAL</span>
+                  <h1>
+                    Hola, {currentUser.nombre.split(' ')[0]} <span className="wave">✳</span>
+                  </h1>
+                  <p>
+                    Consulta de un vistazo tus datos registrados y el seguimiento de tu bienestar.
+                  </p>
+                </div>
+
+                <button
+                  className="button button-primary"
+                  onClick={() => setActiveTab('encuesta')}
+                >
+                  Actualizar seguimiento <span>→</span>
+                </button>
+              </section>
+
+              <div className="section-title-row">
+                <div>
+                  <h2>Estado general</h2>
+                  <p>Información que has registrado en tu perfil</p>
+                </div>
+                <span className="subtle-tag">Datos personales</span>
+              </div>
+
+              <section className="metrics-grid">
+                <article className="metric-card">
+                  <div className="metric-top">
+                    <span className="metric-icon mint">↗</span>
+                    <span className="metric-label">Peso registrado</span>
+                  </div>
+                  <div className="metric-value">
+                    {currentUser.peso || 65.5}<small> kg</small>
+                  </div>
+                  <p className="metric-foot">Último dato guardado</p>
+                </article>
+
+                <article className="metric-card">
+                  <div className="metric-top">
+                    <span className="metric-icon lavender">⌁</span>
+                    <span className="metric-label">Estatura</span>
+                  </div>
+                  <div className="metric-value">
+                    {currentUser.estatura || 1.65}<small> m</small>
+                  </div>
+                  <p className="metric-foot">Información de perfil</p>
+                </article>
+
+                <article className="metric-card">
+                  <div className="metric-top">
+                    <span className="metric-icon peach">♡</span>
+                    <span className="metric-label">Edad</span>
+                  </div>
+                  <div className="metric-value">
+                    {currentUser.edad || '—'}<small> años</small>
+                  </div>
+                  <p className="metric-foot">Información de perfil</p>
+                </article>
+              </section>
+
+              <section className="surface-card home-pressure-summary">
+                <div>
+                  <span className="eyebrow">PRESIÓN ARTERIAL</span>
+                  <h3>
+                    {latestPressure
+                      ? `${latestPressure.PAS}/${latestPressure.PAD} mmHg`
+                      : 'Sin mediciones registradas'}
+                  </h3>
+                  <p>
+                    {latestPressure
+                      ? classifyPressure(latestPressure.PAS, latestPressure.PAD).label
+                      : 'Agrega tu primera medición para conocer tu clasificación.'}
+                  </p>
+                </div>
+
+                <button
+                  className="button button-primary"
+                  onClick={() => setActiveTab('presion')}
+                >
+                  Consultar presión arterial →
+                </button>
+              </section>
+
+              <section className="surface-card home-next-step">
+                <div>
+                  <span className="eyebrow">TU ACOMPAÑAMIENTO</span>
+                  <h3>¿Tienes alguna duda sobre tu seguimiento?</h3>
+                  <p>Comunícate con tu profesional para resolver tus preguntas.</p>
+                </div>
+                <button
+                  className="text-button"
+                  onClick={() => setActiveTab('mensajes')}
+                >
+                  Ir a mensajes →
+                </button>
+              </section>
+            </>
+          )}
+
+          {activeTab === 'presion' && (
+            <>
+              <PageTitle
+                eyebrow="SEGUIMIENTO DE SALUD"
+                title="Presión arterial"
+                description="Registra tus mediciones y consulta cómo se clasifican según los rangos que compartiste."
+              />
+
+              {!isClient && patients.length > 0 && (
+                <section className="surface-card profile-selector">
+                  <label htmlFor="pressure-patient-select">Paciente</label>
+                  <select
+                    id="pressure-patient-select"
+                    value={pressureTarget?.email || ''}
+                    onChange={e => {
+                      setSelectedProfileEmail(e.target.value);
+                      setBpNotice('');
+                    }}
+                  >
+                    {patients.map(patient => (
+                      <option key={patient.email} value={patient.email}>
+                        {patient.nombre} · {patient.email}
+                      </option>
+                    ))}
+                  </select>
+                </section>
+              )}
+
+              {pressureTarget ? (
+                <>
+                  <section className="pressure-overview-grid">
+                    <article className="surface-card pressure-current-card">
+                      <span className="eyebrow">ÚLTIMA MEDICIÓN</span>
+
+                      {latestPressure ? (
+                        <>
+                          <div className="pressure-reading">
+                            {latestPressure.PAS}
+                            <small> / {latestPressure.PAD}</small>
+                          </div>
+                          <span className="pressure-unit">mmHg</span>
+
+                          <span className={`pressure-status ${classifyPressure(latestPressure.PAS, latestPressure.PAD).level}`}>
+                            {classifyPressure(latestPressure.PAS, latestPressure.PAD).label}
+                          </span>
+
+                          <p>
+                            {classifyPressure(latestPressure.PAS, latestPressure.PAD).advice}
+                          </p>
+
+                          <small>
+                            Registrada: {latestPressure.fecha} · {latestPressure.hora}
+                          </small>
+                        </>
+                      ) : (
+                        <>
+                          <h3>Aún no hay registros</h3>
+                          <p>
+                            Cuando agregues una medición, aquí podrás consultar su clasificación.
+                          </p>
+                        </>
+                      )}
+                    </article>
+
+                    <article className="surface-card pressure-form-card">
+                      <div className="card-heading">
+                        <div>
+                          <h3>Agregar medición</h3>
+                          <p>Introduce los valores que muestra tu baumanómetro.</p>
+                        </div>
+                      </div>
+
+                      <form className="pressure-form" onSubmit={savePressure}>
+                        <label>
+                          Presión sistólica (PAS)
+                          <div className="input-with-unit">
+                            <input
+                              type="number"
+                              min="50"
+                              max="260"
+                              value={bpDraft.PAS}
+                              onChange={e => setBpDraft({
+                                ...bpDraft,
+                                PAS: e.target.value
+                              })}
+                              placeholder="Ej. 120"
+                              required
+                            />
+                            <span>mmHg</span>
+                          </div>
+                        </label>
+
+                        <label>
+                          Presión diastólica (PAD)
+                          <div className="input-with-unit">
+                            <input
+                              type="number"
+                              min="30"
+                              max="160"
+                              value={bpDraft.PAD}
+                              onChange={e => setBpDraft({
+                                ...bpDraft,
+                                PAD: e.target.value
+                              })}
+                              placeholder="Ej. 80"
+                              required
+                            />
+                            <span>mmHg</span>
+                          </div>
+                        </label>
+
+                        <div className="profile-fields">
+                          <label>
+                            Fecha
+                            <input
+                              type="date"
+                              value={bpDraft.fecha}
+                              onChange={e => setBpDraft({
+                                ...bpDraft,
+                                fecha: e.target.value
+                              })}
+                              required
+                            />
+                          </label>
+
+                          <label>
+                            Hora
+                            <input
+                              type="time"
+                              value={bpDraft.hora}
+                              onChange={e => setBpDraft({
+                                ...bpDraft,
+                                hora: e.target.value
+                              })}
+                              required
+                            />
+                          </label>
+                        </div>
+
+                        <label>
+                          Notas (opcional)
+                          <textarea
+                            rows="2"
+                            value={bpDraft.notas}
+                            onChange={e => setBpDraft({
+                              ...bpDraft,
+                              notas: e.target.value
+                            })}
+                            placeholder="Por ejemplo: después de descansar 5 minutos"
+                          />
+                        </label>
+
+                        <button className="button button-primary" type="submit">
+                          Guardar medición ✓
+                        </button>
+
+                        {bpNotice && (
+                          <p className={`form-feedback ${
+                            bpNotice.includes('correctamente')
+                              ? 'success-feedback'
+                              : 'error-feedback'
+                          }`}>
+                            {bpNotice}
+                          </p>
+                        )}
+                      </form>
+                    </article>
+                  </section>
+
+                  {pressureRecords.length > 1 && (
+                    <section className="surface-card pressure-history-card">
+                      <div className="card-heading">
+                        <div>
+                          <h3>Cómo ha cambiado tu presión</h3>
+                          <p>Comparación de presión sistólica y diastólica · mmHg.</p>
+                        </div>
+                      </div>
+
+                      <div className="chart-wrap tall">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart
+                            data={pressureChartData}
+                            margin={{
+                              top: 10,
+                              right: 12,
+                              left: -18,
+                              bottom: 0
+                            }}
+                          >
+                            <CartesianGrid stroke="#edf1ef" vertical={false} />
+                            <XAxis
+                              dataKey="day"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fill: '#89958f', fontSize: 11 }}
+                            />
+                            <YAxis
+                              domain={[40, 'auto']}
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fill: '#89958f', fontSize: 11 }}
+                            />
+                            <Tooltip />
+                            <Area
+                              type="monotone"
+                              dataKey="PAS"
+                              name="Sistólica"
+                              stroke="#27866f"
+                              fill="#27866f"
+                              fillOpacity={0.12}
+                              strokeWidth={2.5}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="PAD"
+                              name="Diastólica"
+                              stroke="#8a78c4"
+                              fill="#8a78c4"
+                              fillOpacity={0.08}
+                              strokeWidth={2.5}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </section>
+                  )}
+
+                  <section className="surface-card pressure-history-card">
+                    <div className="card-heading">
+                      <div>
+                        <h3>Historial de mediciones</h3>
+                        <p>Seguimiento registrado para este paciente.</p>
+                      </div>
+                      <span className="soft-pill">
+                        {pressureRecords.length} registros
+                      </span>
+                    </div>
+
+                    {pressureRecords.length ? (
+                      <div className="pressure-history-list">
+                        {pressureRecords.map(record => {
+                          const status = classifyPressure(record.PAS, record.PAD);
+
+                          return (
+                            <article className="pressure-history-row" key={record.id}>
+                              <div className="history-reading">
+                                <strong>{record.PAS}/{record.PAD}</strong>
+                                <small>mmHg</small>
+                              </div>
+
+                              <div className="history-date">
+                                <strong>{record.fecha}</strong>
+                                <small>
+                                  {record.hora}
+                                  {record.notas ? ` · ${record.notas}` : ''}
+                                </small>
+                              </div>
+
+                              <span className={`pressure-status ${status.level}`}>
+                                {status.label}
+                              </span>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="empty-state">
+                        Todavía no hay mediciones. Registra la primera para comenzar el seguimiento.
+                      </p>
+                    )}
+                  </section>
+                </>
+              ) : (
+                <div className="surface-card empty-profile">
+                  Aún no hay pacientes registrados.
+                </div>
+              )}
+
+              <section className="surface-card pressure-ranges">
+                <div className="card-heading">
+                  <div>
+                    <h3>Tabla de clasificación</h3>
+                    <p>Rangos de referencia proporcionados para esta plataforma.</p>
+                  </div>
+                </div>
+
+                <div className="pressure-range-table">
+                  <div>
+                    <strong>Categoría</strong>
+                    <strong>Umbral de PA</strong>
+                  </div>
+                  <div>
+                    <span>Normal</span>
+                    <span>PAS &lt;120 y PAD &lt;80 mmHg</span>
+                  </div>
+                  <div>
+                    <span>Elevada</span>
+                    <span>PAS 120–129 y PAD &lt;80 mmHg</span>
+                  </div>
+                  <div>
+                    <span>Hipertensión · Estadio 1</span>
+                    <span>PAS 130–139 o PAD 80–89 mmHg</span>
+                  </div>
+                  <div>
+                    <span>Hipertensión · Estadio 2</span>
+                    <span>PAS ≥140 o PAD ≥90 mmHg</span>
+                  </div>
+                </div>
+
+                <p className="pressure-disclaimer">
+                  Esta clasificación orienta el seguimiento y no sustituye una valoración médica.
+                  Una sola lectura no confirma un diagnóstico. Si presentas dolor de pecho,
+                  dificultad para respirar, debilidad repentina, alteraciones de visión o dolor
+                  de cabeza intenso, busca atención urgente.
+                </p>
+              </section>
+            </>
+          )}
+
+          {isClient && activeTab === 'encuesta' && (
+            <>
+              <PageTitle
+                eyebrow="TU PROGRESO"
+                title="Mi seguimiento semanal"
+                description="Registra tus porciones para visualizar tus hábitos de alimentación."
+              />
+
+              <div className="notice-banner">
+                <span>i</span>
+                <p>
+                  El registro es orientativo y no sustituye una evaluación nutricional profesional.
+                </p>
+              </div>
+
+              <section className="tracking-grid">
+                <article className="surface-card tracking-form">
+                  <div className="card-heading">
+                    <div>
+                      <h3>Registro de porciones</h3>
+                      <p>Actualiza las cantidades de ejemplo.</p>
+                    </div>
+                    <span className="soft-pill">Esta semana</span>
+                  </div>
+
+                  {surveyData.map((item, index) => (
+                    <div className="portion-row" key={item.name}>
+                      <div>
+                        <strong>{item.name}</strong>
+                        <small>Porciones registradas</small>
+                      </div>
+
+                      <div className="number-control">
+                        <button
+                          onClick={() => updatePortions(index, item.porciones - 1)}
+                          aria-label={`Restar porción de ${item.name}`}
+                        >
+                          −
+                        </button>
+
+                        <input
+                          aria-label={`Porciones de ${item.name}`}
+                          type="number"
+                          min="0"
+                          max="30"
+                          value={item.porciones}
+                          onChange={e => updatePortions(index, e.target.value)}
+                        />
+
+                        <button
+                          onClick={() => updatePortions(index, item.porciones + 1)}
+                          aria-label={`Sumar porción de ${item.name}`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <p className="saved-note">
+                    <span /> Los cambios se guardan en este navegador.
+                  </p>
+                </article>
+
+                <article className="surface-card tracking-chart">
+                  <div className="card-heading">
+                    <div>
+                      <h3>Consumo registrado</h3>
+                      <p>Comparativo de porciones por grupo.</p>
+                    </div>
+                  </div>
+
+                  <div className="chart-wrap tall">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={surveyData}
+                        margin={{
+                          top: 12,
+                          right: 4,
+                          left: -22,
+                          bottom: 0
+                        }}
+                      >
+                        <CartesianGrid stroke="#edf1ef" vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#89958f', fontSize: 11 }}
+                        />
+                        <YAxis
+                          allowDecimals={false}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fill: '#89958f', fontSize: 11 }}
+                        />
+                        <Tooltip cursor={{ fill: '#f4f8f6' }} />
+                        <Bar
+                          dataKey="porciones"
+                          name="Porciones"
+                          fill="#3c9a83"
+                          radius={[7, 7, 0, 0]}
+                          maxBarSize={42}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </article>
+              </section>
+            </>
+          )}
+
+          {activeTab === 'perfil' && (
+            <>
+              <PageTitle
+                eyebrow={isClient ? 'MI CUENTA' : 'EXPEDIENTES'}
+                title={isClient ? 'Mi perfil' : 'Perfil del paciente'}
+                description={
+                  isClient
+                    ? 'Mantén tus datos personales y de salud actualizados para recibir un mejor acompañamiento.'
+                    : 'Consulta la información personal, de contacto y salud que ha compartido cada paciente.'
+                }
+              />
+
+              {!isClient && patients.length > 0 && (
+                <section className="surface-card profile-selector">
+                  <label htmlFor="patient-profile-select">
+                    Selecciona un paciente
+                  </label>
+                  <select
+                    id="patient-profile-select"
+                    value={profileTarget?.email || ''}
+                    onChange={e => {
+                      setSelectedProfileEmail(e.target.value);
+                      setProfileNotice('');
+                    }}
+                  >
+                    {patients.map(patient => (
+                      <option key={patient.email} value={patient.email}>
+                        {patient.nombre} · {patient.email}
+                      </option>
+                    ))}
+                  </select>
+                </section>
+              )}
+
+              {profileTarget ? (
+                <div className="profile-layout">
+                  <form
+                    className="profile-main-column profile-edit-form"
+                    onSubmit={saveProfile}
+                  >
+                    <section className="surface-card profile-section">
+                      <div className="profile-section-heading">
+                        <span className="profile-section-icon">♙</span>
+                        <div>
+                          <h3>Datos personales</h3>
+                          <p>Información general del paciente.</p>
+                        </div>
+                      </div>
+
+                      <div className="profile-fields">
+                        <label>
+                          Nombre completo
+                          <input
+                            value={profileDraft.nombre || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              nombre: e.target.value
+                            })}
+                            required
+                          />
+                        </label>
+
+                        <label>
+                          Correo electrónico
+                          <input
+                            type="email"
+                            value={profileDraft.email || ''}
+                            disabled
+                          />
+                        </label>
+
+                        <label>
+                          Fecha de nacimiento
+                          <input
+                            type="date"
+                            value={profileDraft.fechaNacimiento || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              fechaNacimiento: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Edad
+                          <input
+                            type="number"
+                            min="1"
+                            max="120"
+                            value={profileDraft.edad || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              edad: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Sexo (opcional)
+                          <select
+                            value={profileDraft.sexo || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              sexo: e.target.value
+                            })}
+                          >
+                            <option value="">Prefiero no indicarlo</option>
+                            <option value="Mujer">Mujer</option>
+                            <option value="Hombre">Hombre</option>
+                            <option value="Otro">Otro</option>
+                          </select>
+                        </label>
+
+                        <label>
+                          Estatura (m)
+                          <input
+                            type="number"
+                            min="0.5"
+                            max="2.5"
+                            step="0.01"
+                            placeholder="Ej. 1.65"
+                            value={profileDraft.estatura || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              estatura: e.target.value
+                            })}
+                          />
+                        </label>
+                      </div>
+                    </section>
+
+                    <section className="surface-card profile-section">
+                      <div className="profile-section-heading">
+                        <span className="profile-section-icon">⌖</span>
+                        <div>
+                          <h3>Datos de contacto</h3>
+                          <p>
+                            Medios para mantener comunicación y contacto en caso necesario.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="profile-fields">
+                        <label>
+                          Teléfono
+                          <input
+                            type="tel"
+                            placeholder="10 dígitos"
+                            value={profileDraft.telefono || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              telefono: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Dirección
+                          <input
+                            placeholder="Calle, número, colonia y ciudad"
+                            value={profileDraft.direccion || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              direccion: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label className="field-full">
+                          Contacto de emergencia
+                          <input
+                            placeholder="Nombre y teléfono de contacto"
+                            value={profileDraft.contactoEmergencia || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              contactoEmergencia: e.target.value
+                            })}
+                          />
+                        </label>
+                      </div>
+                    </section>
+
+                    <section className="surface-card profile-section">
+                      <div className="profile-section-heading">
+                        <span className="profile-section-icon">♡</span>
+                        <div>
+                          <h3>Información de salud</h3>
+                          <p>
+                            Datos que ayudan a contextualizar tu orientación nutricional.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="profile-fields">
+                        <label>
+                          Peso actual (kg)
+                          <input
+                            type="number"
+                            min="1"
+                            max="500"
+                            step="0.1"
+                            placeholder="Ej. 65.5"
+                            value={profileDraft.peso || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              peso: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Objetivo nutricional
+                          <input
+                            placeholder="Ej. mejorar hábitos, rendimiento..."
+                            value={profileDraft.objetivo || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              objetivo: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Antecedentes médicos
+                          <textarea
+                            rows="3"
+                            placeholder="Escribe enfermedades o antecedentes relevantes"
+                            value={profileDraft.antecedentes || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              antecedentes: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Alergias
+                          <textarea
+                            rows="3"
+                            placeholder="Indica alergias conocidas o escribe 'Ninguna'"
+                            value={profileDraft.alergias || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              alergias: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Medicamentos actuales
+                          <textarea
+                            rows="3"
+                            placeholder="Nombre y dosis, si aplica"
+                            value={profileDraft.medicamentos || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              medicamentos: e.target.value
+                            })}
+                          />
+                        </label>
+
+                        <label>
+                          Restricciones alimentarias
+                          <textarea
+                            rows="3"
+                            placeholder="Alimentos que no consumes o debes evitar"
+                            value={profileDraft.restricciones || ''}
+                            onChange={e => setProfileDraft({
+                              ...profileDraft,
+                              restricciones: e.target.value
+                            })}
+                          />
+                        </label>
+                      </div>
+
+                      <button
+                        className="button button-primary profile-save"
+                        type="submit"
+                      >
+                        {isClient ? 'Guardar mis datos' : 'Guardar expediente'} <span>✓</span>
+                      </button>
+
+                      {profileNotice && (
+                        <p className="form-feedback success-feedback">
+                          {profileNotice}
+                        </p>
+                      )}
+                    </section>
+                  </form>
+
+                  <aside className="profile-side-column">
+                    <section className="surface-card profile-summary">
+                      <div className="profile-avatar-large">
+                        {profileDraft.foto
+                          ? <img src={profileDraft.foto} alt={`Fotografía de ${profileTarget.nombre}`} />
+                          : (profileTarget.nombre || 'P').split(' ').map(part => part[0]).slice(0, 2).join('')}
+                      </div>
+
+                      <label className="photo-upload-label">
+                        Agregar o cambiar fotografía
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => updateProfilePhoto(e.target.files?.[0])}
+                        />
+                      </label>
+
+                      <h3>{profileTarget.nombre}</h3>
+                      <p>{isClient ? 'Perfil de paciente' : 'Expediente de paciente'}</p>
+                      <span className="profile-status">● Perfil individual</span>
+
+                      <div className="profile-summary-line">
+                        <span>Correo</span>
+                        <strong>{profileTarget.email}</strong>
+                      </div>
+
+                      <div className="profile-summary-line">
+                        <span>Peso</span>
+                        <strong>
+                          {profileTarget.peso
+                            ? `${profileTarget.peso} kg`
+                            : 'Sin registrar'}
+                        </strong>
+                      </div>
+
+                      <div className="profile-summary-line">
+                        <span>Estatura</span>
+                        <strong>
+                          {profileTarget.estatura
+                            ? `${profileTarget.estatura} m`
+                            : 'Sin registrar'}
+                        </strong>
+                      </div>
+                    </section>
+
+                    <section className="surface-card password-section">
+                      <div className="profile-section-heading">
+                        <span className="profile-section-icon">⌑</span>
+                        <div>
+                          <h3>Seguridad</h3>
+                          <p>Cambia la contraseña de tu cuenta.</p>
+                        </div>
+                      </div>
+
+                      <form onSubmit={changePassword}>
+                        <label>
+                          Contraseña actual
+                          <input
+                            type="password"
+                            autoComplete="current-password"
+                            value={currentPassword}
+                            onChange={e => setCurrentPassword(e.target.value)}
+                            required
+                          />
+                        </label>
+
+                        <label>
+                          Nueva contraseña
+                          <input
+                            type="password"
+                            autoComplete="new-password"
+                            minLength="6"
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                            required
+                          />
+                        </label>
+
+                        <label>
+                          Confirmar contraseña
+                          <input
+                            type="password"
+                            autoComplete="new-password"
+                            minLength="6"
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            required
+                          />
+                        </label>
+
+                        <button className="button button-primary" type="submit">
+                          Actualizar contraseña
+                        </button>
+
+                        {passwordNotice && (
+                          <p className={`form-feedback ${
+                            passwordNotice.includes('correctamente')
+                              ? 'success-feedback'
+                              : 'error-feedback'
+                          }`}>
+                            {passwordNotice}
+                          </p>
+                        )}
+                      </form>
+                    </section>
+                  </aside>
+                </div>
+              ) : (
+                <div className="surface-card empty-profile">
+                  Aún no hay pacientes registrados.
+                </div>
+              )}
+
+              <div className="notice-banner profile-security-note">
+                <span>i</span>
+                <p>
+                  Esta versión guarda los datos en el almacenamiento local del navegador
+                  y no es adecuada para expedientes clínicos reales. Para producción se
+                  requiere servidor, base de datos protegida, cifrado y contraseñas con hash.
+                </p>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'mensajes' && (
+            <>
+              <PageTitle
+                eyebrow="COMUNICACIÓN"
+                title="Centro de mensajes"
+                description={
+                  isClient
+                    ? 'Mantén el contacto con tu profesional de nutrición.'
+                    : 'Consulta y responde los mensajes de tus pacientes.'
+                }
+              />
+
+              <section className="surface-card messaging-layout">
+                {!isClient && (
+                  <aside className="chat-contacts">
+                    <span className="nav-caption">PACIENTES</span>
+
+                    {patients.map(patient => (
+                      <button
+                        key={patient.email}
+                        className={`contact-item ${
+                          activeChatClient === patient.email ? 'selected' : ''
+                        }`}
+                        onClick={() => setActiveChatClient(patient.email)}
+                      >
+                        <span className="contact-avatar">
+                          {patient.nombre.split(' ').map(part => part[0]).slice(0, 2).join('')}
+                        </span>
+
+                        <span>
+                          <strong>{patient.nombre}</strong>
+                          <small>{patient.email}</small>
+                        </span>
+                      </button>
+                    ))}
+                  </aside>
+                )}
+
+                <div className="chat-panel">
+                  <div className="chat-panel-head">
+                    <div className="contact-avatar large">
+                      {(isClient
+                        ? currentUser.nombre
+                        : patients.find(p => p.email === activeChatClient)?.nombre || 'P'
+                      ).split(' ').map(part => part[0]).slice(0, 2).join('')}
+                    </div>
+
+                    <div>
+                      <strong>
+                        {isClient
+                          ? 'Equipo de nutrición'
+                          : patients.find(p => p.email === activeChatClient)?.nombre || 'Selecciona un paciente'}
+                      </strong>
+                      <small>
+                        <span className="online-dot" /> Conversación de seguimiento
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="chat-messages">
+                    {currentMessages.map((message, index) => (
+                      <div
+                        key={`${index}-${message.text}`}
+                        className={`message-row ${
+                          message.sender === (isClient ? 'cliente' : 'admin')
+                            ? 'sent'
+                            : 'received'
+                        }`}
+                      >
+                        <div className="message-bubble">
+                          {message.text}
+                          {message.time && <small>{message.time}</small>}
+                        </div>
+                      </div>
+                    ))}
+
+                    {currentMessages.length === 0 && (
+                      <div className="empty-state">
+                        Aún no hay mensajes. Inicia la conversación.
+                      </div>
+                    )}
+                  </div>
+
+                  <form className="chat-compose" onSubmit={sendMessage}>
+                    <input
+                      value={inputMsg}
+                      onChange={e => setInputMsg(e.target.value)}
+                      placeholder="Escribe un mensaje..."
+                      aria-label="Escribe un mensaje"
+                    />
+                    <button
+                      className="button button-primary"
+                      type="submit"
+                      disabled={!inputMsg.trim()}
+                    >
+                      Enviar <span>↑</span>
+                    </button>
+                  </form>
+                </div>
+              </section>
+            </>
+          )}
+
+          {!isClient && activeTab === 'admin-dashboard' && (
+            <>
+              <PageTitle
+                eyebrow="ÁREA PROFESIONAL"
+                title={`Buen día, ${currentUser.nombre.split(' ')[0]}`}
+                description="Aquí tienes un resumen de la actividad de tu consulta."
+              />
+
+              <section className="admin-stats">
+                <article className="metric-card">
+                  <div className="metric-top">
+                    <span className="metric-icon mint">♙</span>
+                    <span className="metric-label">Pacientes registrados</span>
+                  </div>
+                  <div className="metric-value">
+                    {patients.length.toString().padStart(2, '0')}
+                  </div>
+                  <p className="metric-foot">Perfiles de demostración</p>
+                </article>
+
+                <article className="metric-card">
+                  <div className="metric-top">
+                    <span className="metric-icon lavender">✉</span>
+                    <span className="metric-label">Conversaciones</span>
+                  </div>
+                  <div className="metric-value">
+                    {Object.keys(conversations).length.toString().padStart(2, '0')}
+                  </div>
+                  <p className="metric-foot">Chats disponibles</p>
+                </article>
+
+                <article className="metric-card">
+                  <div className="metric-top">
+                    <span className="metric-icon peach">♡</span>
+                    <span className="metric-label">Especialidad</span>
+                  </div>
+                  <div className="metric-value text-value">Nutrición</div>
+                  <p className="metric-foot">Atención y seguimiento</p>
+                </article>
+              </section>
+
+              <section className="surface-card patient-list-card">
+                <div className="card-heading">
+                  <div>
+                    <h3>Directorio de pacientes</h3>
+                    <p>Administra los perfiles individuales de tu consulta.</p>
+                  </div>
+
+                  <div className="directory-actions">
+                    <span className="soft-pill">{patients.length} perfiles</span>
+                    <button
+                      className="button button-primary"
+                      type="button"
+                      onClick={() => {
+                        setShowNewPatient(value => !value);
+                        setNewPatientNotice('');
+                      }}
+                    >
+                      ＋ Nuevo paciente
+                    </button>
+                  </div>
+                </div>
+
+                {showNewPatient && (
+                  <form className="new-patient-form" onSubmit={createPatient}>
+                    <label>
+                      Nombre completo
+                      <input
+                        value={newPatient.nombre}
+                        onChange={e => setNewPatient({
+                          ...newPatient,
+                          nombre: e.target.value
+                        })}
+                        placeholder="Nombre del paciente"
+                        required
+                      />
+                    </label>
+
+                    <label>
+                      Correo electrónico
+                      <input
+                        type="email"
+                        value={newPatient.email}
+                        onChange={e => setNewPatient({
+                          ...newPatient,
+                          email: e.target.value
+                        })}
+                        placeholder="paciente@correo.com"
+                        required
+                      />
+                    </label>
+
+                    <label>
+                      Contraseña temporal
+                      <input
+                        type="password"
+                        minLength="6"
+                        value={newPatient.password}
+                        onChange={e => setNewPatient({
+                          ...newPatient,
+                          password: e.target.value
+                        })}
+                        placeholder="Mínimo 6 caracteres"
+                        required
+                      />
+                    </label>
+
+                    <button className="button button-primary" type="submit">
+                      Crear perfil
+                    </button>
+
+                    {newPatientNotice && (
+                      <p className="form-feedback error-feedback">
+                        {newPatientNotice}
+                      </p>
+                    )}
+                  </form>
+                )}
+
+                <div className="patient-table-wrap">
+                  <table className="patient-table">
+                    <thead>
+                      <tr>
+                        <th>Paciente</th>
+                        <th>Correo electrónico</th>
+                        <th>Edad</th>
+                        <th>Peso</th>
+                        <th>Acción</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {patients.map(patient => (
+                        <tr key={patient.email}>
+                          <td><strong>{patient.nombre}</strong></td>
+                          <td>{patient.email}</td>
+                          <td>{patient.edad || '—'} años</td>
+                          <td>{patient.peso ? `${patient.peso} kg` : '—'}</td>
+                          <td>
+                            <button
+                              className="table-action"
+                              onClick={() => {
+                                setSelectedProfileEmail(patient.email);
+                                setActiveTab('perfil');
+                              }}
+                            >
+                              Ver perfil →
+                            </button>
+
+                            <button
+                              className="table-action"
+                              onClick={() => {
+                                setActiveChatClient(patient.email);
+                                setActiveTab('mensajes');
+                              }}
+                            >
+                              Mensaje
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <div className="notice-banner">
+                <span>i</span>
+                <p>
+                  Los perfiles, métricas y conversaciones mostrados son datos de demostración.
+                  Para uso clínico real se necesita autenticación segura, permisos y almacenamiento protegido.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        <footer className="app-footer">
+          <span>© {new Date().getFullYear()} NutriSalud+</span>
+          <span>Un acompañamiento para cada etapa de tu bienestar.</span>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+function PageTitle({ eyebrow, title, description }) {
+  return (
+    <section className="page-heading simple-heading">
+      <div>
+        <span className="eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+    </section>
+  );
+}
+
+export default App;
