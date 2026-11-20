@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NutriPresión · Nutrición y Control de Presión Arterial</title>
+<title>NutriSalud+ · Nutrición con seguimiento personal</title>
+<meta name="description" content="Seguimiento nutricional y citas con el consultorio NutriSalud+." />
+<meta name="theme-color" content="#f7f7f2" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -218,14 +220,14 @@ tbody tr:last-child td{border-bottom:0}
 .hero-cta .btn{flex:1 1 100%}
 .user-chip small{display:none}
 }
-</style>
+.toast{position:fixed;right:20px;bottom:20px;z-index:200;max-width:min(420px,calc(100vw - 40px));padding:14px 18px;border-radius:14px;box-shadow:0 14px 34px #08261f2b;font-weight:700;opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}.toast-error{background:#fee2e2;color:#991b1b}.toast-ok{background:#d1fae5;color:#065f46}</style>
 </head>
 <body>
 
 <!-- Banner de configuración (solo aparece si faltan credenciales) -->
-<div id="configBanner" class="config-banner hidden">
-⚙️ <b>Falta configurar Supabase.</b> Edita las líneas <code>SUPABASE_URL</code> y <code>SUPABASE_ANON_KEY</code> en el script.
-<button onclick="document.getElementById('configBanner').classList.add('hidden')">Ocultar</button>
+<div id="configNotice" class="config-banner hidden">
+⚙️ <b>Falta configurar Supabase.</b> Revisa las variables públicas del proyecto.
+<button onclick="document.getElementById('configNotice').classList.add('hidden')">Ocultar</button>
 </div>
 
 <!-- LANDING -->
@@ -235,7 +237,7 @@ tbody tr:last-child td{border-bottom:0}
 <nav class="nav">
 <a href="#" class="brand" onclick="return false">
 <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></span>
-<span>NutriPresión<small>Nutrición & Presión</small></span>
+<span>NutriSalud+<small>Nutrición & Presión</small></span>
 </a>
 <div class="nav-links">
 <a href="#servicios">Servicios</a>
@@ -386,7 +388,7 @@ Expediente digital seguro
 <div class="foot-brand">
 <a href="#" class="brand" onclick="return false">
 <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></span>
-<span>NutriPresión<small>Nutrición & Presión</small></span>
+<span>NutriSalud+<small>Nutrición & Presión</small></span>
 </a>
 <p>Plataforma de nutrición y control de presión arterial para consultorios.</p>
 </div>
@@ -395,7 +397,7 @@ Expediente digital seguro
 <div class="foot-col"><h4>Legal</h4><a>Aviso de privacidad</a><a>Términos de uso</a></div>
 </div>
 <div class="foot-bottom">
-<span>© 2025 NutriPresión</span>
+<span>© <span id="copyrightYear">2026</span> NutriSalud+</span>
 <span>Datos personales sensibles · México</span>
 </div>
 </div>
@@ -421,11 +423,21 @@ Expediente digital seguro
 </div>
 <div class="field">
 <label for="password">Contraseña</label>
-<input id="password" type="password" placeholder="Mínimo 6 caracteres" autocomplete="current-password" required />
+<input id="password" type="password" placeholder="Al menos 8 caracteres" minlength="8" autocomplete="current-password" required />
 </div>
 <button type="submit" class="btn btn-primary btn-block" id="submitBtn"><span id="submitLabel">Crear mi cuenta</span></button>
 </form>
+<button type="button" class="text-link hidden" id="forgotPassword">¿Olvidaste tu contraseña?</button>
 <p class="form-note">Al continuar aceptas el aviso de privacidad y el tratamiento de datos personales.</p>
+</div>
+<div id="resetView" class="hidden">
+<h3 id="resetTitle">Crea una contraseña nueva</h3>
+<p>Elige una contraseña segura para recuperar el acceso a tu espacio.</p>
+<div id="resetAlert" class="alert hidden"></div>
+<form id="resetForm" novalidate>
+<div class="field"><label for="newPassword">Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required /></div>
+<button type="submit" class="btn btn-primary btn-block" id="resetSubmit">Guardar contraseña</button>
+</form>
 </div>
 <div class="success" id="successView">
 <div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
@@ -443,7 +455,7 @@ Expediente digital seguro
 <nav class="nav">
 <a href="#" class="brand" onclick="return false">
 <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></span>
-<span>NutriPresión<small id="roleSubtitle">Panel</small></span>
+<span>NutriSalud+<small id="roleSubtitle">Panel</small></span>
 </a>
 <div style="display:flex;align-items:center;gap:12px">
 <div class="user-chip">
@@ -609,678 +621,7 @@ Expediente digital seguro
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-/* ============================================================
-⚙️ CONFIGURA TUS CREDENCIALES DE SUPABASE AQUÍ
-Las encuentras en: Supabase → Project Settings → API
-============================================================ */
-
-/* ---------- Utils ---------- */
-const $ = (s, c = document) => c.querySelector(s);
-const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
-const show = (el) => el && el.classList.remove('hidden');
-const hide = (el) => el && el.classList.add('hidden');
-const esc = (str) => String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmtDate = (iso) => iso ? new Date(iso).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-const fmtDateOnly = (iso) => iso ? new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-const initials = (n) => (n || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-const bmiLabel = (b) => {
-if (!b) return '—';
-if (b < 18.5) return 'Bajo peso';
-if (b < 25) return 'Normal';
-if (b < 30) return 'Sobrepeso';
-return 'Obesidad';
-};
-
-/* ---------- Supabase client (con guardia) ---------- */
-let sb = null;
-let sbError = null;
-try {
-const isValidUrl = SUPABASE_URL && SUPABASE_URL.startsWith('http') && !SUPABASE_URL.includes('TU_');
-const isValidKey = SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 20 && !SUPABASE_ANON_KEY.includes('TU_');
-if (isValidUrl && isValidKey && window.supabase) {
-sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} else {
-sbError = 'Falta configurar SUPABASE_URL y SUPABASE_ANON_KEY';
-}
-} catch (e) {
-sbError = e.message;
-sb = null;
-}
-if (!sb) {
-const banner = $('#configBanner');
-if (banner) banner.classList.remove('hidden');
-}
-
-/* ---------- Header scroll ---------- */
-window.addEventListener('scroll', () => {
-const h = $('#header');
-if (h) h.classList.toggle('scrolled', window.scrollY > 12);
-}, { passive: true });
-
-/* ---------- Mobile menu ---------- */
-const burger = $('#burger');
-if (burger) {
-burger.addEventListener('click', () => {
-const m = $('#mobileMenu');
-if (m) m.classList.toggle('show');
-burger.classList.toggle('open');
-});
-}
-$$('#mobileMenu a, #mobileMenu button').forEach(el => {
-el.addEventListener('click', () => {
-const m = $('#mobileMenu');
-if (m) m.classList.remove('show');
-if (burger) burger.classList.remove('open');
-});
-});
-
-/* ---------- Modal Auth ---------- */
-let authMode = 'register';
-const modal = $('#modal');
-const formView = $('#formView');
-const successView = $('#successView');
-const authAlert = $('#authAlert');
-
-function openModal(mode) {
-authMode = mode;
-const isLogin = mode === 'login';
-$('#modalTitle').textContent = isLogin ? 'Iniciar sesión' : 'Crear cuenta';
-$('#modalSubtitle').textContent = isLogin ? 'Accede a tu panel.' : 'Regístrate para comenzar tu seguimiento.';
-$('#submitLabel').textContent = isLogin ? 'Entrar' : 'Crear mi cuenta';
-$('#nameField').style.display = isLogin ? 'none' : 'block';
-if (authAlert) authAlert.classList.add('hidden');
-if (formView) formView.style.display = 'block';
-if (successView) successView.classList.remove('show');
-if (modal) modal.classList.add('show');
-document.body.style.overflow = 'hidden';
-}
-function closeModal() {
-if (modal) modal.classList.remove('show');
-document.body.style.overflow = '';
-}
-
-document.addEventListener('click', (e) => {
-const t = e.target.closest('[data-open-modal]');
-if (t) {
-e.preventDefault();
-openModal(t.dataset.openModal);
-}
-});
-
-if ($('#closeModal')) $('#closeModal').addEventListener('click', closeModal);
-if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-/* ---------- Form de auth ---------- */
-const authForm = $('#authForm');
-if (authForm) authForm.addEventListener('submit', async (e) => {
-e.preventDefault();
-if (!authAlert) return;
-authAlert.classList.add('hidden');
-
-if (!sb) {
-authAlert.textContent = 'Supabase no está configurado. Reemplaza SUPABASE_URL y SUPABASE_ANON_KEY en el script al inicio del archivo.';
-authAlert.className = 'alert alert-warn';
-authAlert.classList.remove('hidden');
-return;
-}
-
-const email = $('#email').value.trim();
-const password = $('#password').value;
-if (!email || !password) {
-authAlert.textContent = 'Completa email y contraseña.';
-authAlert.className = 'alert alert-error';
-authAlert.classList.remove('hidden');
-return;
-}
-
-const btn = $('#submitBtn');
-btn.disabled = true;
-const original = $('#submitLabel').textContent;
-$('#submitLabel').textContent = 'Procesando...';
-
-try {
-if (authMode === 'register') {
-const name = $('#name').value.trim();
-if (!name) {
-authAlert.textContent = 'Escribe tu nombre completo.';
-authAlert.className = 'alert alert-error';
-authAlert.classList.remove('hidden');
-btn.disabled = false;
-$('#submitLabel').textContent = original;
-return;
-}
-const { data, error } = await sb.auth.signUp({
-email, password,
-options: { data: { full_name: name } }
-});
-if (error) throw error;
-
-if (data.user && !data.session) {
-formView.style.display = 'none';
-successView.classList.add('show');
-$('#successTitle').textContent = 'Revisa tu correo';
-$('#successMsg').textContent = 'Te enviamos un enlace de confirmación. Verifícalo y luego inicia sesión.';
-$('#successBtn').textContent = 'Entendido';
-$('#successBtn').onclick = () => closeModal();
-} else {
-formView.style.display = 'none';
-successView.classList.add('show');
-$('#successTitle').textContent = '¡Cuenta creada!';
-$('#successMsg').textContent = 'Bienvenido a NutriPresión. Cargando tu panel...';
-$('#successBtn').textContent = 'Continuar';
-$('#successBtn').onclick = async () => {
-closeModal();
-if (data.session?.user) {
-currentUser = data.session.user;
-await loadUserAndPanel();
-}
-};
-}
-} else {
-const { error } = await sb.auth.signInWithPassword({ email, password });
-if (error) throw error;
-closeModal();
-}
-} catch (err) {
-authAlert.textContent = err.message || 'Ocurrió un error.';
-authAlert.className = 'alert alert-error';
-authAlert.classList.remove('hidden');
-} finally {
-btn.disabled = false;
-$('#submitLabel').textContent = original;
-}
-});
-
-/* ---------- Estado auth ---------- */
-let currentUser = null;
-let currentProfile = null;
-let currentPatient = null;
-
-async function loadUserAndPanel() {
-if (!currentUser || !sb) return;
-
-const { data: prof, error: profErr } = await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
-if (profErr) { console.error(profErr); }
-currentProfile = prof || {
-id: currentUser.id,
-email: currentUser.email,
-role: 'patient',
-full_name: currentUser.user_metadata?.full_name || currentUser.email
-};
-
-if ($('#userName')) $('#userName').textContent = currentProfile.full_name || currentProfile.email;
-if ($('#userEmail')) $('#userEmail').textContent = currentProfile.email || '';
-if ($('#userAvatar')) $('#userAvatar').textContent = initials(currentProfile.full_name || currentProfile.email);
-const roleTag = $('#roleTag');
-if (roleTag) {
-roleTag.textContent = currentProfile.role === 'admin' ? 'Admin' : 'Paciente';
-roleTag.className = 'role-tag ' + currentProfile.role;
-}
-if ($('#roleSubtitle')) $('#roleSubtitle').textContent = currentProfile.role === 'admin' ? 'Panel admin' : 'Panel paciente';
-
-hide($('#landing'));
-show($('#app'));
-document.body.style.overflow = '';
-
-if (currentProfile.role === 'admin') {
-hide($('#patientPanel'));
-show($('#adminPanel'));
-await loadAdminPanel();
-} else {
-hide($('#adminPanel'));
-show($('#patientPanel'));
-await loadPatientPanel();
-}
-}
-
-if (sb) {
-sb.auth.onAuthStateChange(async (event, session) => {
-if (session?.user) {
-currentUser = session.user;
-await loadUserAndPanel();
-} else {
-currentUser = null;
-currentProfile = null;
-currentPatient = null;
-hide($('#app'));
-show($('#landing'));
-document.body.style.overflow = '';
-}
-});
-}
-
-if ($('#logoutBtn')) $('#logoutBtn').addEventListener('click', async () => {
-if (sb) await sb.auth.signOut();
-});
-
-/* ================= PATIENT PANEL ================= */
-async function loadPatientPanel() {
-if (!sb || !currentUser) return;
-let { data: pat } = await sb.from('patients').select('*').eq('user_id', currentUser.id).maybeSingle();
-
-if (!pat) {
-const { data: created } = await sb.from('patients').insert({
-user_id: currentUser.id,
-full_name: currentProfile.full_name || currentUser.email,
-email: currentUser.email
-}).select().single();
-pat = created;
-}
-currentPatient = pat;
-
-if ($('#pGreet')) $('#pGreet').textContent = (pat?.full_name || 'paciente').split(' ')[0];
-if ($('#pWeight')) $('#pWeight').textContent = pat?.weight_kg ?? '—';
-if ($('#pBmi')) $('#pBmi').textContent = pat?.bmi ?? '—';
-if ($('#pBmiLabel')) $('#pBmiLabel').textContent = bmiLabel(pat?.bmi);
-if ($('#pBp')) $('#pBp').textContent = (pat?.systolic && pat?.diastolic) ? `${pat.systolic}/${pat.diastolic}` : '—';
-
-if ($('#pProfile')) {
-$('#pProfile').innerHTML = `
-<div class="data-item"><span>Nombre</span><b>${esc(pat?.full_name || '—')}</b></div>
-<div class="data-item"><span>Email</span><b>${esc(pat?.email || currentProfile.email)}</b></div>
-<div class="data-item"><span>Teléfono</span><b>${esc(pat?.phone || '—')}</b></div>
-<div class="data-item"><span>Fecha nac.</span><b>${pat?.birth_date ? fmtDateOnly(pat.birth_date) : '—'}</b></div>
-<div class="data-item"><span>Altura</span><b>${pat?.height_cm ? pat.height_cm + ' cm' : '—'}</b></div>
-<div class="data-item"><span>Objetivo</span><b>${esc(pat?.nutritional_goal || '—')}</b></div>
-`;
-}
-
-if ($('#mHeight')) $('#mHeight').value = pat?.height_cm ?? '';
-if ($('#mWeight')) $('#mWeight').value = pat?.weight_kg ?? '';
-if ($('#mSys')) $('#mSys').value = pat?.systolic ?? '';
-if ($('#mDia')) $('#mDia').value = pat?.diastolic ?? '';
-
-await loadPatientMeasurements();
-await loadPatientAppointments();
-}
-
-async function loadPatientMeasurements() {
-if (!sb || !currentPatient) return;
-const { data: ms } = await sb.from('measurements')
-.select('*').eq('patient_id', currentPatient.id)
-.order('measured_at', { ascending: false });
-const list = ms || [];
-if ($('#pCount')) $('#pCount').textContent = list.length;
-
-const tbody = $('#pMeasureTable');
-if (tbody) {
-if (!list.length) {
-tbody.innerHTML = '<tr><td colspan="5" class="empty">Aún no hay mediciones.</td></tr>';
-} else {
-tbody.innerHTML = list.slice(0, 20).map(m => `
-<tr>
-<td>${fmtDate(m.measured_at)}</td>
-<td>${m.weight_kg ?? '—'}</td>
-<td>${m.bmi ?? '—'}</td>
-<td>${m.systolic && m.diastolic ? m.systolic + '/' + m.diastolic : '—'}</td>
-<td>${m.heart_rate ?? '—'}</td>
-</tr>
-`).join('');
-}
-}
-
-if ($('#pChart')) {
-const weights = list.slice(0, 12).reverse();
-$('#pChart').innerHTML = weights.length >= 2
-? buildChart(weights, 'weight_kg', '#10b981')
-: '<div class="empty" style="background:#fff">Registra al menos 2 mediciones para ver la gráfica.</div>';
-}
-}
-
-async function loadPatientAppointments() {
-if (!sb || !currentPatient) return;
-const { data: appts } = await sb.from('appointments')
-.select('*').eq('patient_id', currentPatient.id)
-.order('scheduled_at', { ascending: false });
-
-const tbody = $('#pApptTable');
-if (!tbody) return;
-if (!appts || !appts.length) {
-tbody.innerHTML = '<tr><td colspan="4" class="empty">Sin citas solicitadas.</td></tr>';
-return;
-}
-tbody.innerHTML = appts.map(a => `
-<tr>
-<td>${fmtDate(a.scheduled_at)}</td>
-<td>${esc(a.reason || '—')}</td>
-<td><span class="tag ${a.status}">${a.status}</span></td>
-<td>${(a.status === 'pendiente' || a.status === 'confirmada')
-? `<button type="button" class="btn btn-danger btn-sm" data-cancel-appt="${a.id}">Cancelar</button>` : ''}</td>
-</tr>
-`).join('');
-
-tbody.querySelectorAll('[data-cancel-appt]').forEach(b => b.addEventListener('click', async () => {
-if (!confirm('¿Cancelar esta cita?')) return;
-const { error } = await sb.from('appointments').update({ status: 'cancelada' }).eq('id', b.dataset.cancelAppt);
-if (error) alert(error.message); else loadPatientAppointments();
-}));
-}
-
-const pMeasureForm = $('#pMeasureForm');
-if (pMeasureForm) pMeasureForm.addEventListener('submit', async (e) => {
-e.preventDefault();
-const alertEl = $('#mAlert');
-if (alertEl) alertEl.classList.add('hidden');
-
-const weight = parseFloat($('#mWeight').value) || null;
-const height = parseFloat($('#mHeight').value) || null;
-const sys = parseInt($('#mSys').value) || null;
-const dia = parseInt($('#mDia').value) || null;
-const hr = parseInt($('#mHr').value) || null;
-
-if (!weight && !sys && !dia) {
-if (alertEl) {
-alertEl.textContent = 'Captura al menos peso o presión.';
-alertEl.className = 'alert alert-error';
-alertEl.classList.remove('hidden');
-}
-return;
-}
-
-const { error } = await sb.from('measurements').insert({
-patient_id: currentPatient.id,
-weight_kg: weight, height_cm: height,
-systolic: sys, diastolic: dia, heart_rate: hr
-});
-
-if (error) {
-if (alertEl) {
-alertEl.textContent = error.message;
-alertEl.className = 'alert alert-error';
-alertEl.classList.remove('hidden');
-}
-return;
-}
-if (alertEl) {
-alertEl.textContent = '✓ Medición guardada.';
-alertEl.className = 'alert alert-ok';
-alertEl.classList.remove('hidden');
-}
-if ($('#mHr')) $('#mHr').value = '';
-await loadPatientPanel();
-});
-
-const pApptForm = $('#pApptForm');
-if (pApptForm) pApptForm.addEventListener('submit', async (e) => {
-e.preventDefault();
-const alertEl = $('#aAlert');
-if (alertEl) alertEl.classList.add('hidden');
-const dt = $('#aDatetime').value;
-const reason = $('#aReason').value.trim();
-if (!dt || !reason) return;
-
-const { error } = await sb.from('appointments').insert({
-patient_id: currentPatient.id,
-scheduled_at: new Date(dt).toISOString(),
-reason, status: 'pendiente'
-});
-
-if (error) {
-if (alertEl) {
-alertEl.textContent = error.message;
-alertEl.className = 'alert alert-error';
-alertEl.classList.remove('hidden');
-}
-return;
-}
-if (alertEl) {
-alertEl.textContent = '✓ Cita solicitada. Espera confirmación.';
-alertEl.className = 'alert alert-ok';
-alertEl.classList.remove('hidden');
-}
-$('#aDatetime').value = '';
-$('#aReason').value = '';
-await loadPatientAppointments();
-});
-
-/* Editar perfil */
-if ($('#pEditProfileBtn')) $('#pEditProfileBtn').addEventListener('click', () => {
-if (!currentPatient) return;
-$('#eName').value = currentPatient.full_name || '';
-$('#eBirth').value = currentPatient.birth_date || '';
-$('#ePhone').value = currentPatient.phone || '';
-$('#eGoal').value = currentPatient.nutritional_goal || '';
-if ($('#editAlert')) $('#editAlert').classList.add('hidden');
-if ($('#editModal')) $('#editModal').classList.add('show');
-});
-if ($('#closeEditModal')) $('#closeEditModal').addEventListener('click', () => $('#editModal').classList.remove('show'));
-if ($('#editModal')) $('#editModal').addEventListener('click', (e) => {
-if (e.target.id === 'editModal') $('#editModal').classList.remove('show');
-});
-
-const editForm = $('#editForm');
-if (editForm) editForm.addEventListener('submit', async (e) => {
-e.preventDefault();
-if (!currentPatient) return;
-const alertEl = $('#editAlert');
-if (alertEl) alertEl.classList.add('hidden');
-
-const { error } = await sb.from('patients').update({
-full_name: $('#eName').value.trim(),
-birth_date: $('#eBirth').value || null,
-phone: $('#ePhone').value.trim() || null,
-nutritional_goal: $('#eGoal').value.trim() || null
-}).eq('id', currentPatient.id);
-
-if (error) {
-if (alertEl) {
-alertEl.textContent = error.message;
-alertEl.className = 'alert alert-error';
-alertEl.classList.remove('hidden');
-}
-return;
-}
-if ($('#editModal')) $('#editModal').classList.remove('show');
-await loadPatientPanel();
-});
-
-/* ================= ADMIN PANEL ================= */
-let allPatients = [];
-let allAppointments = [];
-
-async function loadAdminPanel() {
-if (!sb) return;
-
-const { data: patients } = await sb.from('patients').select('*').order('created_at', { ascending: false });
-const { data: profiles } = await sb.from('profiles').select('*');
-const profMap = {};
-(profiles || []).forEach(p => profMap[p.id] = p);
-
-allPatients = (patients || []).map(p => ({ ...p, profile: profMap[p.user_id] || {} }));
-
-const { data: ms } = await sb.from('measurements').select('patient_id, measured_at');
-const countMap = {}, lastMap = {};
-(ms || []).forEach(m => {
-countMap[m.patient_id] = (countMap[m.patient_id] || 0) + 1;
-if (!lastMap[m.patient_id] || m.measured_at > lastMap[m.patient_id]) lastMap[m.patient_id] = m.measured_at;
-});
-allPatients.forEach(p => {
-p._measureCount = countMap[p.id] || 0;
-p._lastMeasure = lastMap[p.id] || null;
-});
-
-if ($('#aPatients')) $('#aPatients').textContent = allPatients.length;
-if ($('#aMeasures')) $('#aMeasures').textContent = (ms || []).length;
-
-const { data: appts } = await sb.from('appointments').select('*').order('scheduled_at', { ascending: false });
-allAppointments = appts || [];
-if ($('#aPending')) $('#aPending').textContent = allAppointments.filter(a => a.status === 'pendiente').length;
-if ($('#aConfirmed')) $('#aConfirmed').textContent = allAppointments.filter(a => a.status === 'confirmada').length;
-
-renderAdminPatients();
-renderAdminAppointments();
-}
-
-function renderAdminPatients() {
-const tbody = $('#aPatientTable');
-if (!tbody) return;
-const q = ($('#aSearch')?.value || '').toLowerCase().trim();
-const filtered = allPatients.filter(p => {
-if (!q) return true;
-return (p.full_name || '').toLowerCase().includes(q) ||
-(p.email || '').toLowerCase().includes(q) ||
-(p.profile?.email || '').toLowerCase().includes(q);
-});
-
-if (!filtered.length) {
-tbody.innerHTML = '<tr><td colspan="9" class="empty">No hay pacientes que coincidan.</td></tr>';
-return;
-}
-
-tbody.innerHTML = filtered.map(p => `
-<tr>
-<td><b>${esc(p.full_name || '—')}</b><br><small style="color:var(--muted)">${esc(p.profile?.email || '')}</small></td>
-<td>${esc(p.email || p.profile?.email || '—')}</td>
-<td>${p.weight_kg ?? '—'}</td>
-<td>${p.height_cm ?? '—'}</td>
-<td>${p.bmi ?? '—'}</td>
-<td>${p.systolic && p.diastolic ? p.systolic + '/' + p.diastolic : '—'}</td>
-<td>${p._measureCount}</td>
-<td>${fmtDateOnly(p.created_at)}</td>
-<td><button type="button" class="btn btn-ghost btn-sm" data-open-patient="${p.id}">Ver</button></td>
-</tr>
-`).join('');
-
-tbody.querySelectorAll('[data-open-patient]').forEach(b =>
-b.addEventListener('click', () => openPatientModal(b.dataset.openPatient))
-);
-}
-
-if ($('#aSearch')) $('#aSearch').addEventListener('input', renderAdminPatients);
-
-function renderAdminAppointments() {
-const tbody = $('#aApptTable');
-if (!tbody) return;
-if (!allAppointments.length) {
-tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin citas registradas.</td></tr>';
-return;
-}
-const pMap = {};
-allPatients.forEach(p => pMap[p.id] = p);
-
-tbody.innerHTML = allAppointments.map(a => {
-const p = pMap[a.patient_id];
-let actions = '—';
-if (a.status === 'pendiente') {
-actions = `<button type="button" class="btn btn-ok btn-sm" data-appt="${a.id}" data-status="confirmada">Confirmar</button>
-<button type="button" class="btn btn-danger btn-sm" data-appt="${a.id}" data-status="rechazada" style="margin-left:4px">Rechazar</button>`;
-} else if (a.status === 'confirmada') {
-actions = `<button type="button" class="btn btn-danger btn-sm" data-appt="${a.id}" data-status="cancelada">Cancelar</button>`;
-}
-return `<tr>
-<td>${fmtDate(a.scheduled_at)}</td>
-<td>${esc(p?.full_name || '—')}</td>
-<td>${esc(a.reason || '—')}</td>
-<td><span class="tag ${a.status}">${a.status}</span></td>
-<td>${actions}</td>
-</tr>`;
-}).join('');
-
-tbody.querySelectorAll('[data-appt]').forEach(b => b.addEventListener('click', async () => {
-const { error } = await sb.from('appointments').update({ status: b.dataset.status }).eq('id', b.dataset.appt);
-if (error) alert(error.message); else loadAdminPanel();
-}));
-}
-
-async function openPatientModal(patientId) {
-const p = allPatients.find(x => x.id === patientId);
-if (!p) return;
-
-if ($('#pmTitle')) $('#pmTitle').textContent = p.full_name || 'Expediente';
-if ($('#pmSubtitle')) $('#pmSubtitle').textContent = p.profile?.email || p.email || '';
-
-if ($('#pmBody')) {
-$('#pmBody').innerHTML = `
-<div class="data-list">
-<div class="data-item"><span>Fecha nacimiento</span><b>${p.birth_date ? fmtDateOnly(p.birth_date) : '—'}</b></div>
-<div class="data-item"><span>Teléfono</span><b>${esc(p.phone || '—')}</b></div>
-<div class="data-item"><span>Peso</span><b>${p.weight_kg ?? '—'} kg</b></div>
-<div class="data-item"><span>Altura</span><b>${p.height_cm ?? '—'} cm</b></div>
-<div class="data-item"><span>IMC</span><b>${p.bmi ?? '—'} ${p.bmi ? '('+bmiLabel(p.bmi)+')' : ''}</b></div>
-<div class="data-item"><span>Presión</span><b>${p.systolic && p.diastolic ? p.systolic + '/' + p.diastolic : '—'} mmHg</b></div>
-<div class="data-item"><span>Frecuencia cardíaca</span><b>${p.heart_rate ?? '—'} lpm</b></div>
-<div class="data-item"><span>Objetivo</span><b>${esc(p.nutritional_goal || '—')}</b></div>
-<div class="data-item"><span>Registrado</span><b>${fmtDate(p.created_at)}</b></div>
-</div>
-`;
-}
-
-const { data: ms } = await sb.from('measurements')
-.select('*').eq('patient_id', patientId)
-.order('measured_at', { ascending: false });
-
-const tbody = $('#pmMeasures');
-if (tbody) {
-if (!ms || !ms.length) {
-tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin mediciones.</td></tr>';
-} else {
-tbody.innerHTML = ms.slice(0, 30).map(m => `
-<tr>
-<td>${fmtDate(m.measured_at)}</td>
-<td>${m.weight_kg ?? '—'}</td>
-<td>${m.bmi ?? '—'}</td>
-<td>${m.systolic && m.diastolic ? m.systolic + '/' + m.diastolic : '—'}</td>
-<td>${m.heart_rate ?? '—'}</td>
-</tr>
-`).join('');
-}
-}
-
-if ($('#patientModal')) $('#patientModal').classList.add('show');
-}
-if ($('#closePatientModal')) $('#closePatientModal').addEventListener('click', () => $('#patientModal').classList.remove('show'));
-if ($('#patientModal')) $('#patientModal').addEventListener('click', (e) => {
-if (e.target.id === 'patientModal') $('#patientModal').classList.remove('show');
-});
-
-/* ---------- Chart builder ---------- */
-function buildChart(items, field, color) {
-const vals = items.map(i => Number(i[field])).filter(v => !isNaN(v));
-if (vals.length < 2) return '';
-const W = 600, H = 180, P = 24;
-const min = Math.min(...vals), max = Math.max(...vals);
-const range = max - min || 1;
-const stepX = (W - P * 2) / (vals.length - 1);
-const points = vals.map((v, i) => {
-const x = P + i * stepX;
-const y = H - P - ((v - min) / range) * (H - P * 2);
-return [x, y];
-});
-const line = points.map(p => p.join(',')).join(' ');
-const area = `M${points[0][0]},${H - P} L${line.replace(/ /g, ' L')} L${points[points.length - 1][0]},${H - P} Z`;
-
-return `
-<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-<defs>
-<linearGradient id="g_${field}" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0%" stop-color="${color}" stop-opacity=".3"/>
-<stop offset="100%" stop-color="${color}" stop-opacity="0"/>
-</linearGradient>
-</defs>
-<path d="${area}" fill="url(#g_${field})"/>
-<polyline points="${line}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-${points.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="${color}" stroke-width="2.5"/>`).join('')}
-${vals.map((v, i) => `<text x="${points[i][0]}" y="${points[i][1] - 10}" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${v}</text>`).join('')}
-</svg>
-`;
-}
-
-/* ---------- Init ---------- */
-(async function init() {
-if (!sb) return;
-try {
-const { data } = await sb.auth.getSession();
-if (data?.session?.user) {
-currentUser = data.session.user;
-await loadUserAndPanel();
-}
-} catch (e) {
-console.error('Init error:', e);
-}
-})();
-</script>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script type="module" src="/src/app.js"></script>
 </body>
 </html>
