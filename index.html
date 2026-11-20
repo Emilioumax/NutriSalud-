@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NutriSalud+ · Nutrición con seguimiento personal</title>
+<title>NutriSalud+</title>
 <meta name="description" content="Seguimiento nutricional y citas con el consultorio NutriSalud+." />
 <meta name="theme-color" content="#f7f7f2" />
+<link rel="icon" type="image/png" href="%BASE_URL%logo-nutrisalud.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -47,6 +48,8 @@ p{margin:0}
 .header.scrolled{background:rgba(246,250,248,.82);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border-bottom-color:var(--line);box-shadow:0 10px 30px -24px rgba(8,38,31,.6)}
 .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
 .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:1.05rem;letter-spacing:-.03em;cursor:pointer}
+.brand-logo{display:block;width:194px;height:auto;max-height:48px;object-fit:contain}
+.app-header .brand-logo{width:174px}
 .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--grad);box-shadow:0 10px 22px -10px rgba(13,148,136,.9)}
 .logo svg{width:20px;height:20px;stroke:#fff}
 .brand small{display:block;font-size:.66rem;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;line-height:1}
@@ -253,8 +256,7 @@ tbody tr:last-child td{border-bottom:0}
 <div class="wrap">
 <nav class="nav">
 <a href="#" class="brand" onclick="return false">
-<span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></span>
-<span>NutriSalud+<small>Nutrición & Presión</small></span>
+<img class="brand-logo" src="%BASE_URL%logo-nutrisalud.png" alt="NutriSalud+" />
 </a>
 <div class="nav-links">
 <a href="#servicios">Servicios</a>
@@ -393,7 +395,7 @@ Expediente digital seguro
 <div class="contact-card nutritionist-profile">
 <img class="nutritionist-photo" src="%BASE_URL%nutriologo-gustavo.png" alt="Nutriólogo Gustavo Guzmán Godoy en su consultorio" loading="lazy" />
 <div class="nutritionist-info"><span class="eyebrow">Tu nutriólogo</span><h3>Gustavo Guzmán Godoy</h3><p>Atención nutricional con cita previa. Puedes solicitarla desde tu cuenta o coordinarla por WhatsApp.</p>
-<div class="contact-actions"><a class="btn btn-primary" href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp · 33 2591 1857</a><a class="btn btn-ghost" href="mailto:Gustavo.godoy2357@alumnos.udg.mx">Enviar correo</a></div></div>
+<div class="contact-actions"><a class="btn btn-primary" href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp · 33 2591 1857</a></div></div>
 </div></div></section>
 
 <section class="cta">
@@ -414,14 +416,13 @@ Expediente digital seguro
 <div class="foot-grid">
 <div class="foot-brand">
 <a href="#" class="brand" onclick="return false">
-<span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></span>
-<span>NutriSalud+<small>Nutrición & Presión</small></span>
+<img class="brand-logo" src="%BASE_URL%logo-nutrisalud.png" alt="NutriSalud+" />
 </a>
 <p>Plataforma de nutrición y control de presión arterial para consultorios.</p>
 </div>
 <div class="foot-col"><h4>Plataforma</h4><a href="#servicios">Servicios</a><a href="#como-funciona">Cómo funciona</a><a href="#plataforma">Paneles</a></div>
 <div class="foot-col"><h4>Acceso</h4><a data-open-modal="login">Iniciar sesión</a><a data-open-modal="register">Crear cuenta</a></div>
-<div class="foot-col"><h4>Contacto</h4><a href="#contacto">Datos del nutriólogo</a><a href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="mailto:Gustavo.godoy2357@alumnos.udg.mx">Correo electrónico</a></div>
+<div class="foot-col"><h4>Contacto</h4><a href="#contacto">Datos del nutriólogo</a><a href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">WhatsApp</a></div>
 </div>
 <div class="foot-bottom">
 <span>© <span id="copyrightYear">2026</span> NutriSalud+</span>
@@ -483,8 +484,7 @@ Expediente digital seguro
 <div class="wrap">
 <nav class="nav">
 <a href="#" class="brand" onclick="return false">
-<span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></span>
-<span>NutriSalud+<small id="roleSubtitle">Panel</small></span>
+<img class="brand-logo" src="%BASE_URL%logo-nutrisalud.png" alt="NutriSalud+" /><small id="roleSubtitle" class="hidden">Panel</small>
 </a>
 <div style="display:flex;align-items:center;gap:12px">
 <div class="user-chip">
