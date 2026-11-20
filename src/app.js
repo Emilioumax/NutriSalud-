@@ -134,6 +134,8 @@ function showAuthSuccess(title, message) {
 function setAppVisible(visible) {
   $('#app').classList.toggle('hidden', !visible);
   $('#landing').classList.toggle('hidden', visible);
+  $('#botLaunch').classList.toggle('hidden', visible);
+  if (visible) $('#appointmentBot').classList.add('hidden');
   if (!visible) {
     $('#patientPanel').classList.add('hidden');
     $('#adminPanel').classList.add('hidden');
@@ -393,7 +395,7 @@ async function requestAppointment(event) {
   }
   $('#aDatetime').value = '';
   $('#aReason').value = '';
-  alert.textContent = 'Solicitud enviada. Te avisaremos cuando la revisen.';
+  alert.textContent = 'Solicitud guardada en Supabase. El consultorio debe confirmar la cita; puedes coordinarlo por WhatsApp desde este panel.';
   alert.className = 'alert alert-ok';
   await loadPatientAppointments();
 }
@@ -567,6 +569,17 @@ document.addEventListener('keydown', (event) => {
     document.body.style.overflow = '';
   }
 });
+const appointmentBot = $('#appointmentBot');
+const botLaunch = $('#botLaunch');
+function toggleAppointmentBot(open) {
+  appointmentBot.classList.toggle('hidden', !open);
+  botLaunch.setAttribute('aria-expanded', String(open));
+}
+botLaunch.addEventListener('click', () => toggleAppointmentBot(appointmentBot.classList.contains('hidden')));
+$$('[data-open-bot]').forEach((button) => button.addEventListener('click', () => toggleAppointmentBot(true)));
+$('#botNo').addEventListener('click', () => toggleAppointmentBot(false));
+$('#appointmentBot [data-open-modal]').addEventListener('click', () => toggleAppointmentBot(false));
+$('#appointmentBot a').addEventListener('click', () => toggleAppointmentBot(false));
 $('#copyrightYear').textContent = new Date().getFullYear();
 $('#aDatetime').min = localDateTime(new Date());
 $('#authForm').addEventListener('submit', authSubmit);

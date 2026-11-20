@@ -123,6 +123,11 @@ p{margin:0}
 .foot-col a{display:block;font-size:.88rem;color:#3c5b54;font-weight:600;padding:6px 0;cursor:pointer}
 .foot-col a:hover{color:var(--brand)}
 .foot-bottom{border-top:1px solid var(--line);padding-top:24px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted);font-weight:600}
+.contact-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--shadow-sm)}
+.contact-card h3{font-size:1.1rem;margin-bottom:10px}.contact-card p{color:var(--muted);font-size:.9rem;margin-bottom:16px}.contact-actions{display:flex;flex-wrap:wrap;gap:10px}
+.bot-launch{position:fixed;right:22px;bottom:22px;z-index:190;border:0;border-radius:999px;background:var(--deep);color:#fff;padding:14px 20px;font-family:inherit;font-size:.9rem;font-weight:700;box-shadow:0 14px 34px #08261f40;cursor:pointer}
+.bot-box{position:fixed;right:22px;bottom:84px;z-index:190;width:min(340px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow-lg)}
+.bot-box h3{font-size:1rem;margin-bottom:8px}.bot-box p{font-size:.88rem;color:var(--muted);margin-bottom:14px}.bot-actions{display:grid;gap:9px}.bot-actions .btn{white-space:normal}
 
 .modal{position:fixed;inset:0;z-index:200;display:none;place-items:center;padding:20px;background:rgba(5,43,34,.45);backdrop-filter:blur(6px)}
 .modal.show{display:grid}
@@ -271,7 +276,7 @@ Expediente digital seguro
 <h1>Tu nutrición y tu <span class="grad">presión arterial</span>, en un solo lugar.</h1>
 <p class="lead">Plataforma para consultorio de nutrición: registra pacientes, da seguimiento a su peso y presión arterial, visualiza su evolución y gestiona citas desde un expediente digital centralizado.</p>
 <div class="hero-cta">
-<button type="button" class="btn btn-primary" data-open-modal="register">Crear mi cuenta <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+<button type="button" class="btn btn-primary" data-open-bot>Agendar una cita <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
 <button type="button" class="btn btn-ghost" data-open-modal="login"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Iniciar sesión</button>
 </div>
 <div class="hero-trust">
@@ -316,8 +321,8 @@ Expediente digital seguro
 <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 8-4-16-3 8H2"/></svg></div><h3>Control de presión</h3><p>Registra presión sistólica, diastólica y frecuencia cardíaca con fecha y hora.</p></article>
 <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8"/></svg></div><h3>IMC automático</h3><p>El índice de masa corporal se calcula al instante a partir del peso y la altura.</p></article>
 <article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div><h3>Historial y gráficas</h3><p>Visualiza la evolución del peso y la presión arterial con gráficas claras.</p></article>
-<article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Gestión de citas</h3><p>Solicita, confirma, modifica o cancela citas desde el panel.</p></article>
-<article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg></div><h3>Comunicación</h3><p>Mensajes entre paciente y especialista para dar continuidad al tratamiento.</p></article>
+<article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Gestión de citas</h3><p>Solicita citas desde tu cuenta; el consultorio las revisa y confirma desde su panel.</p></article>
+<article class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg></div><h3>Contacto directo</h3><p>Resuelve la coordinación de tu cita por WhatsApp con el consultorio.</p></article>
 </div>
 </div>
 </section>
@@ -352,7 +357,7 @@ Expediente digital seguro
 <div class="data-item"><span>Registrar peso y presión</span><b>✓</b></div>
 <div class="data-item"><span>Ver historial y gráficas</span><b>✓</b></div>
 <div class="data-item"><span>Solicitar citas</span><b>✓</b></div>
-<div class="data-item"><span>Mensajes al especialista</span><b>✓</b></div>
+<div class="data-item"><span>Contacto por WhatsApp</span><b>✓</b></div>
 </div>
 </div>
 <div class="panel-box">
@@ -368,6 +373,14 @@ Expediente digital seguro
 </div>
 </div>
 </section>
+
+<section class="section" id="contacto">
+<div class="wrap">
+<div class="sec-head"><span class="eyebrow">Contacto</span><h2>Estamos para ayudarte a agendar</h2><p>El asistente solo orienta para iniciar una solicitud de cita. No ofrece recomendaciones médicas ni sustituye una consulta. No compartas datos de salud por WhatsApp; usa tu cuenta para registrar mediciones.</p></div>
+<div class="contact-card" style="max-width:760px;margin:auto;text-align:center">
+<h3>Nutriólogo Gustavo Guzmán Godoy</h3><p>Atención nutricional con cita previa. Puedes solicitarla desde tu cuenta o coordinarla por WhatsApp.</p>
+<div class="contact-actions" style="justify-content:center"><a class="btn btn-primary" href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp · 33 2591 1857</a><a class="btn btn-ghost" href="mailto:Gustavo.godoy2357@alumnos.udg.mx">Gustavo.godoy2357@alumnos.udg.mx</a></div>
+</div></div></section>
 
 <section class="cta">
 <div class="wrap">
@@ -394,7 +407,7 @@ Expediente digital seguro
 </div>
 <div class="foot-col"><h4>Plataforma</h4><a href="#servicios">Servicios</a><a href="#como-funciona">Cómo funciona</a><a href="#plataforma">Paneles</a></div>
 <div class="foot-col"><h4>Acceso</h4><a data-open-modal="login">Iniciar sesión</a><a data-open-modal="register">Crear cuenta</a></div>
-<div class="foot-col"><h4>Legal</h4><a>Aviso de privacidad</a><a>Términos de uso</a></div>
+<div class="foot-col"><h4>Contacto</h4><a href="#contacto">Datos del nutriólogo</a><a href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="mailto:Gustavo.godoy2357@alumnos.udg.mx">Correo electrónico</a></div>
 </div>
 <div class="foot-bottom">
 <span>© <span id="copyrightYear">2026</span> NutriSalud+</span>
@@ -402,6 +415,8 @@ Expediente digital seguro
 </div>
 </div>
 </footer>
+<button type="button" class="bot-launch" id="botLaunch" aria-expanded="false" aria-controls="appointmentBot">¿Agendamos?</button>
+<aside class="bot-box hidden" id="appointmentBot" aria-label="Asistente de citas" aria-live="polite"><h3>Asistente de citas</h3><p>¿Te gustaría agendar una cita con el nutriólogo?</p><div class="bot-actions"><button type="button" class="btn btn-primary" data-open-modal="register">Sí, solicitar desde mi cuenta</button><a class="btn btn-ghost" href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">Sí, continuar por WhatsApp</a><button type="button" class="btn btn-ghost" id="botNo">Ahora no</button></div></aside>
 </div>
 
 <!-- AUTH MODAL -->
@@ -530,6 +545,7 @@ Expediente digital seguro
 <div class="field" style="display:flex;align-items:flex-end"><button type="submit" class="btn btn-primary btn-block">Solicitar cita</button></div>
 </div>
 <div id="aAlert" class="alert hidden"></div>
+<p style="font-size:.82rem;color:var(--muted)">La solicitud queda registrada y pendiente de confirmación. Para coordinarla directamente, <a style="color:var(--brand);font-weight:700" href="https://wa.me/523325911857?text=Hola%2C%20acabo%20de%20solicitar%20una%20cita%20en%20NutriSalud%2B%20y%20quiero%20coordinar%20su%20confirmaci%C3%B3n" target="_blank" rel="noopener noreferrer">escríbenos por WhatsApp</a>.</p>
 </form>
 <div class="table-wrap">
 <table>
