@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NutriSalud+</title>
 <meta name="description" content="Seguimiento nutricional y citas con el consultorio NutriSalud+." />
-<meta name="theme-color" content="#f7f7f2" />
+<meta name="theme-color" content="#052b22" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="NutriSalud+" />
+<link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+<link rel="apple-touch-icon" href="%BASE_URL%app-icon.svg" />
 <link rel="icon" type="image/png" href="%BASE_URL%logo-nutrisalud.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,6 +90,10 @@ p{margin:0}
 .hero h1 .grad{background:linear-gradient(120deg,#0d9488,#10b981 45%,#34d399);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero p.lead{font-size:1.075rem;color:var(--muted);max-width:540px;line-height:1.72}
 .hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.install-modal-copy{font-size:.92rem;color:var(--muted);margin:12px 0 18px}
+.install-steps{padding-left:22px;margin:0 0 20px;color:#33544c;font-size:.88rem;line-height:1.8}
+.install-steps li+li{margin-top:5px}
+.install-note{font-size:.78rem;color:var(--muted);margin-top:14px}
 .hero-trust{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:30px;font-size:.8rem;font-weight:600;color:#6b8781}
 .hero-trust span{display:inline-flex;align-items:center;gap:6px}
 .hero-trust svg{width:14px;height:14px;stroke:var(--brand);stroke-width:2.6}
@@ -264,6 +273,7 @@ tbody tr:last-child td{border-bottom:0}
 <a href="#plataforma">Plataforma</a>
 </div>
 <div class="nav-actions">
+<button type="button" class="btn btn-ghost install-app-button" id="installAppHeader">Instalar app</button>
 <button type="button" class="btn btn-ghost" data-open-modal="login">Iniciar sesión</button>
 <button type="button" class="btn btn-primary" data-open-modal="register">Crear cuenta</button>
 </div>
@@ -274,6 +284,7 @@ tbody tr:last-child td{border-bottom:0}
 <a href="#servicios">Servicios</a>
 <a href="#como-funciona">Cómo funciona</a>
 <a href="#plataforma">Plataforma</a>
+<button type="button" class="btn btn-ghost install-app-button" id="installAppMobile">Instalar app</button>
 <button type="button" class="btn btn-ghost" data-open-modal="login">Iniciar sesión</button>
 <button type="button" class="btn btn-primary" data-open-modal="register">Crear cuenta</button>
 </div>
@@ -292,6 +303,7 @@ Expediente digital seguro
 <p class="lead">Plataforma para consultorio de nutrición: registra pacientes, da seguimiento a su peso y presión arterial, visualiza su evolución y gestiona citas desde un expediente digital centralizado.</p>
 <div class="hero-cta">
 <button type="button" class="btn btn-primary" data-open-bot>Agendar una cita <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+<button type="button" class="btn btn-ghost" id="installApp">Instalar en mi celular</button>
 <button type="button" class="btn btn-ghost" data-open-modal="login"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Iniciar sesión</button>
 </div>
 <div class="hero-trust">
@@ -432,6 +444,14 @@ Expediente digital seguro
 </footer>
 <button type="button" class="bot-launch" id="botLaunch" aria-expanded="false" aria-controls="appointmentBot">¿Agendamos?</button>
 <aside class="bot-box hidden" id="appointmentBot" aria-label="Asistente de citas" aria-live="polite"><h3>Asistente de citas</h3><p>¿Te gustaría agendar una cita con el nutriólogo?</p><div class="bot-actions"><button type="button" class="btn btn-primary" data-open-modal="register">Sí, solicitar desde mi cuenta</button><a class="btn btn-ghost" href="https://wa.me/523325911857?text=Hola%2C%20quiero%20agendar%20una%20cita%20de%20nutrici%C3%B3n" target="_blank" rel="noopener noreferrer">Sí, continuar por WhatsApp</a><button type="button" class="btn btn-ghost" id="botNo">Ahora no</button></div></aside>
+<div class="modal" id="installModal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+<div class="modal-card">
+<button type="button" class="close-x" id="closeInstall" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+<h3 id="installTitle">Instala NutriSalud+</h3>
+<p class="install-modal-copy">Agrega un acceso directo a la pantalla de inicio para abrir la plataforma como una aplicación.</p>
+<ol class="install-steps"><li><b>iPhone o iPad:</b> pulsa Compartir en Safari y elige “Agregar a pantalla de inicio”.</li><li><b>Android:</b> abre el menú ⋮ de Chrome y elige “Instalar aplicación” o “Agregar a pantalla principal”.</li></ol>
+<p class="install-note">Necesitarás conexión a internet para iniciar sesión y consultar o guardar datos.</p>
+</div></div>
 </div>
 
 <!-- AUTH MODAL -->

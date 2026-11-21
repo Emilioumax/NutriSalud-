@@ -135,6 +135,7 @@ function setAppVisible(visible) {
   $('#app').classList.toggle('hidden', !visible);
   $('#landing').classList.toggle('hidden', visible);
   $('#botLaunch').classList.toggle('hidden', visible);
+  $$('.install-app-button, #installApp').forEach((button) => button.classList.toggle('hidden', visible));
   if (visible) $('#appointmentBot').classList.add('hidden');
   if (!visible) {
     $('#patientPanel').classList.add('hidden');
@@ -580,6 +581,48 @@ $$('[data-open-bot]').forEach((button) => button.addEventListener('click', () =>
 $('#botNo').addEventListener('click', () => toggleAppointmentBot(false));
 $('#appointmentBot [data-open-modal]').addEventListener('click', () => toggleAppointmentBot(false));
 $('#appointmentBot a').addEventListener('click', () => toggleAppointmentBot(false));
+const installModal = $('#installModal');
+const installButtons = $$('.install-app-button, #installApp');
+let deferredInstallPrompt = null;
+const isInstalledApp = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+function closeInstallModal() {
+  installModal.classList.remove('show');
+  document.body.style.overflow = '';
+}
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  installButtons.forEach((button) => button.classList.add('hidden'));
+});
+installButtons.forEach((installButton) => installButton.addEventListener('click', async () => {
+  if (isInstalledApp()) {
+    installButtons.forEach((button) => button.classList.add('hidden'));
+    return;
+  }
+  if (deferredInstallPrompt) {
+    const prompt = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    await prompt.prompt();
+    const choice = await prompt.userChoice;
+    if (choice?.outcome === 'accepted') installButtons.forEach((button) => button.classList.add('hidden'));
+    return;
+  }
+  installModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  $('#closeInstall').focus();
+}));
+$('#closeInstall').addEventListener('click', closeInstallModal);
+installModal.addEventListener('click', (event) => {
+  if (event.target === installModal) closeInstallModal();
+});
+if (isInstalledApp()) installButtons.forEach((button) => button.classList.add('hidden'));
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js', { scope: import.meta.env.BASE_URL })
+    .catch((error) => console.warn('No se pudo activar el modo instalable.', error));
+}
 $('#copyrightYear').textContent = new Date().getFullYear();
 $('#aDatetime').min = localDateTime(new Date());
 $('#authForm').addEventListener('submit', authSubmit);

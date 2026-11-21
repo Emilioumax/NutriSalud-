@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "NutriSalud+",
+  "short_name": "NutriSalud+",
+  "description": "Seguimiento nutricional, expediente y solicitud de citas.",
+  "lang": "es-MX",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6faf8",
+  "theme_color": "#052b22",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
